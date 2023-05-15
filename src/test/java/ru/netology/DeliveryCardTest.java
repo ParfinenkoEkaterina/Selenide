@@ -1,36 +1,41 @@
 package ru.netology;
 
-import org.junit.jupiter.api.Test;
-
-import java.lang.module.Configuration;
 import com.codeborne.selenide.Condition;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Keys;
 
 import java.time.Duration;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 
 import static com.codeborne.selenide.Condition.appear;
 import static com.codeborne.selenide.Selenide.*;
+import static com.codeborne.selenide.Selenide.$;
+import static com.codeborne.selenide.Selenide.open;
+
 
 public class DeliveryCardTest {
+
+    private String generateDate(int addDays, String pattern) {
+        return LocalDate.now().plusDays(addDays).format(DateTimeFormatter.ofPattern(pattern));
+    }
+
 
     @Test
     void shouldRegisterUser() {
         open("http://localhost:9999/");
-
-        $x("//a[text()='Город']").click();
-        $("[type=text]").setValue("Казань");
-        $("[type=tel]").setValue("17.05.2023");
-        $("[type=text]").setValue("Антонов Антон");
-        $("[type=tel]").setValue("+79995555555");
-        $("span[class=checkbox__text]").click();
-        $("span[class=button__text").click();
-
-        $x("//p[contains(text(), 'Встреча успешно забронирована на ''17.05.2023')]").should(appear, Duration.ofSeconds(8));
-
-
+        $("[data-test-id='city'] input").setValue("Казань");
+        String currentDate = generateDate(3, "dd.MM.yyyy");
+        $("[data-test-id='date'] input").sendKeys(Keys.chord(Keys.SHIFT, Keys.HOME), Keys.DELETE);
+        $("[data-test-id='date'] input").sendKeys(currentDate);
+        $("[data-test-id='name'] input").setValue("Антонов Антон");
+        $("[data-test-id='phone'] input").setValue("+79995555555");
+        $("label[data-test-id='agreement']").click();
+        $("button.button").click();
+        $(".notification__content")
+                .shouldBe(Condition.visible, Duration.ofSeconds(15))
+                .shouldHave(Condition.exactText("Встреча успешно забронирована на " + currentDate));
 
 
     }
